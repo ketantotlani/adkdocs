@@ -17,23 +17,30 @@ No Gemini API key is required.
 ## Project structure
 
 ```text
-gemma-adk-private-docs-full/
-├── local_doc_agent/
+adkdocs/
+├── src/
+│   ├── __init__.py
 │   ├── agent.py
 │   ├── document_tools.py
 │   ├── personalization_tools.py
 │   ├── artifact_tools.py
-│   └── workspace/
-│       ├── Atlas_Product_Brief_v3.pdf
-│       ├── June_Customer_Research.pdf
-│       ├── Launch_Review_Notes_0818.pdf
-│       └── release-checklist.md
-├── tests/
+│   ├── workspace/
+│   │   ├── Atlas_Product_Brief_v3.pdf
+│   │   ├── June_Customer_Research.pdf
+│   │   ├── Launch_Review_Notes_0818.pdf
+│   │   └── release-checklist.md
+│   └── tests/
+│       ├── test_agent.py
+│       └── test_tools.py
+├── pyproject.toml
+├── requirements.txt
 ├── run-local.sh
-├── run-local.ps1
-├── PUBLICATION_SECTIONS.md
-└── requirements.txt
+└── run-local.ps1
 ```
+
+For a compact tutorial structure, the ADK agent files and their tests live
+directly under `src/`. The editable install configured by `requirements.txt`
+makes the `src` package importable without modifying `sys.path`.
 
 ## 1. Install and test Gemma 4
 
@@ -56,7 +63,7 @@ pip install -r requirements.txt
 ## 3. Test the document layer
 
 ```bash
-python -m unittest discover -s tests -v
+python -m unittest discover -s src/tests -v
 ```
 
 ## 4. Start the full local app
@@ -80,7 +87,18 @@ The launch command configures:
 - ADK's in-memory MemoryService for cross-session recall while the server is running
 - Ollama at `http://localhost:11434`
 
-Open the local ADK Web URL and select `local_doc_agent`.
+The launchers convert the artifact directory to an absolute `file://` URI, as
+required by current ADK releases (and especially important on Windows).
+
+Open the local ADK Web URL and select `src`.
+
+ADK Web is launched directly against `src/`, which is the single agent folder.
+Its `__init__.py` imports `agent`, and `agent.py` exposes `root_agent`, which
+are the discovery conventions ADK uses. If you launch ADK manually, use:
+
+```bash
+adk web src
+```
 
 ## Demo path
 
@@ -194,9 +212,6 @@ the document collection grows.
 
 Source-document tools are read-only and restricted to:
 
-`local_doc_agent/workspace/`
+`src/workspace/`
 
 The local model is served by Ollama. The project does not require a cloud LLM API key.
-# adkdocs
-# adkdocs
-# adkdocs

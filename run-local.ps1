@@ -1,9 +1,19 @@
 $env:OLLAMA_API_BASE = "http://localhost:11434"
 
-New-Item -ItemType Directory -Force -Path ".adk\artifacts" | Out-Null
+$ProjectRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
+Push-Location $ProjectRoot
 
-adk web `
-  --session_service_uri "sqlite:///./.adk/sessions.db" `
-  --artifact_service_uri "file://./.adk/artifacts" `
-  --memory_service_uri "memory://" `
-  .
+try {
+  New-Item -ItemType Directory -Force -Path ".adk\artifacts" | Out-Null
+  $ResolvedArtifactPath = (Resolve-Path ".adk\artifacts").Path
+  $ArtifactUri = ([System.Uri]$ResolvedArtifactPath).AbsoluteUri
+
+  adk web `
+    --session_service_uri "sqlite:///./.adk/sessions.db" `
+    --artifact_service_uri $ArtifactUri `
+    --memory_service_uri "memory://" `
+    src
+}
+finally {
+  Pop-Location
+}

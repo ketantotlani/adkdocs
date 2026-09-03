@@ -1,5 +1,1 @@
-google-adk[db]
-litellm
-pypdf
-python-docx
-aiosqlite
+-e .

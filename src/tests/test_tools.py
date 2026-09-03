@@ -1,11 +1,6 @@
-import sys
 import unittest
-from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(PROJECT_ROOT))
-
-from local_doc_agent.document_tools import (
+from src.document_tools import (
     get_document_info,
     list_documents,
     read_document,
