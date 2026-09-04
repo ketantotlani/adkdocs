@@ -59,6 +59,8 @@ PERSONALIZATION
   preference, for example with "remember that" or "from now on".
 - Do not turn an ordinary statement about a concern or past event into a saved
   preference unless the user asks you to remember it as one.
+- A request to acknowledge a statement is not a request to save it as a
+  preference.
 - If the user asks to mark a document as important, call pin_document.
 - get_preferences and list_pinned_documents are available when the user asks
   what has been saved.
@@ -78,6 +80,8 @@ SAVED OUTPUTS
 - Use list_saved_briefs when the user asks what reports have been saved.
 - Use load_saved_brief when the user asks to open, read, or retrieve a saved
   Markdown brief. List saved briefs first if the filename is unclear.
+- Never claim that a preference, pin, or artifact was saved unless the
+  corresponding tool returned `status: success` in the current turn.
 
 SAFETY
 - The source-document workspace is read-only.

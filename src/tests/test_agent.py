@@ -12,6 +12,10 @@ class AgentDiscoveryTests(unittest.TestCase):
         self.assertEqual(os.environ["LITELLM_LOCAL_MODEL_COST_MAP"], "True")
         self.assertIsInstance(agent.root_agent.instruction, str)
         self.assertIn("{user:focus?}", agent.root_agent.instruction)
+        self.assertIn(
+            "Never claim that a preference, pin, or artifact was saved",
+            agent.root_agent.instruction,
+        )
 
 
 class FakeCallbackContext:
