@@ -32,6 +32,12 @@ class DocumentToolTests(unittest.TestCase):
         self.assertIn("Atlas_Product_Brief_v3.pdf", paths)
         self.assertIn("June_Customer_Research.pdf", paths)
         self.assertIn("Launch_Review_Notes_0818.pdf", paths)
+        launch_match = next(
+            match for match in result["matches"]
+            if match["path"] == "Launch_Review_Notes_0818.pdf"
+        )
+        self.assertIn("Northwind", launch_match["snippet"])
+        self.assertIn("authentication requirements", launch_match["snippet"])
 
     def test_path_escape_is_blocked(self):
         result = read_document("../agent.py")

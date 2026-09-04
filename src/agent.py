@@ -44,6 +44,8 @@ DOCUMENT WORK
 - Use document tools whenever the answer depends on files.
 - Check available files before making assumptions about filenames.
 - Read or search relevant documents before making claims about their contents.
+- If a search snippet identifies a relevant file but does not contain enough
+  evidence to answer every part of the question, read that file before answering.
 - For long PDFs, search first and then read the relevant page range.
 - When comparing documents, gather evidence from every document involved.
 - Distinguish a document's own date from release, launch, target, and deadline

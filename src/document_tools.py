@@ -15,6 +15,7 @@ TEXT_EXTENSIONS = SUPPORTED_EXTENSIONS - {".pdf", ".docx"}
 
 MAX_READ_CHARS = 40000
 MAX_SEARCH_RESULTS = 30
+MAX_SEARCH_SNIPPET_CHARS = 850
 
 SEARCH_STOP_WORDS = {
     "and", "are", "did", "does", "for", "from", "how", "into", "the",
@@ -236,11 +237,16 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
                     if found:
                         pos, matched_terms = found
                         start = max(0, pos - 160)
-                        end = min(len(text), pos + len(query) + 260)
+                        end = min(
+                            len(text),
+                            pos + len(query) + MAX_SEARCH_SNIPPET_CHARS,
+                        )
                         matches.append({
                             "path": _relative(path),
                             "location": f"page {page_num}",
-                            "snippet": text[start:end].replace("\n", " ")[:450],
+                            "snippet": text[start:end].replace("\n", " ")[
+                                :MAX_SEARCH_SNIPPET_CHARS
+                            ],
                             "matched_terms": matched_terms,
                         })
                         if len(matches) >= max_results:
@@ -255,7 +261,7 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
                         matches.append({
                             "path": _relative(path),
                             "location": f"paragraph {para_num}",
-                            "snippet": para.text[:450],
+                            "snippet": para.text[:MAX_SEARCH_SNIPPET_CHARS],
                             "matched_terms": matched_terms,
                         })
                         if len(matches) >= max_results:
@@ -270,7 +276,7 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
                         matches.append({
                             "path": _relative(path),
                             "location": f"line {line_num}",
-                            "snippet": line[:450],
+                            "snippet": line[:MAX_SEARCH_SNIPPET_CHARS],
                             "matched_terms": matched_terms,
                         })
                         if len(matches) >= max_results:
