@@ -11,7 +11,6 @@ try {
   adk web `
     --session_service_uri "sqlite:///./.adk/sessions.db" `
     --artifact_service_uri $ArtifactUri `
-    --memory_service_uri "memory://" `
     src
 }
 finally {

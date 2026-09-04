@@ -117,3 +117,63 @@ async def list_saved_briefs(tool_context: ToolContext) -> dict[str, Any]:
         "status": "success",
         "artifacts": artifacts,
     }
+
+
+async def load_saved_brief(
+    filename: str,
+    tool_context: ToolContext,
+    version: int | None = None,
+) -> dict[str, Any]:
+    """Load a saved Markdown brief from the current ADK session."""
+    filename = (filename or "").strip()
+
+    if (
+        not filename
+        or "/" in filename
+        or "\\" in filename
+        or filename in {".", ".."}
+    ):
+        return {
+            "status": "error",
+            "message": "Provide a saved artifact filename such as Launch_Brief.md.",
+        }
+
+    try:
+        artifact = await tool_context.load_artifact(
+            filename=filename,
+            version=version,
+        )
+    except Exception as exc:
+        return {
+            "status": "error",
+            "message": f"Could not load artifact: {exc}",
+        }
+
+    if artifact is None:
+        return {
+            "status": "error",
+            "message": f"Artifact not found: {filename}",
+        }
+
+    inline_data = artifact.inline_data
+    if inline_data is None or inline_data.data is None:
+        return {
+            "status": "error",
+            "message": f"Artifact has no readable inline content: {filename}",
+        }
+
+    try:
+        content = inline_data.data.decode("utf-8")
+    except UnicodeDecodeError:
+        return {
+            "status": "error",
+            "message": f"Artifact is not UTF-8 text: {filename}",
+        }
+
+    return {
+        "status": "success",
+        "filename": filename,
+        "version": version if version is not None else "latest",
+        "mime_type": inline_data.mime_type,
+        "content": content,
+    }

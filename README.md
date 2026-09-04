@@ -8,7 +8,6 @@ A fuller local document-assistant project built to demonstrate several Google AD
 - PDF and mixed-file document access
 - Cross-document search and comparison
 - Persistent user-scoped preferences with ADK state + SQLite sessions
-- Cross-session ADK MemoryService recall
 - Saved Markdown briefs using ADK artifacts
 - ADK Web traces for inspecting tool calls
 
@@ -31,6 +30,7 @@ adkdocs/
 │   │   └── release-checklist.md
 │   └── tests/
 │       ├── test_agent.py
+│       ├── test_artifact_tools.py
 │       └── test_tools.py
 ├── pyproject.toml
 ├── requirements.txt
@@ -60,6 +60,15 @@ python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+PowerShell on Windows:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+```
+
 ## 3. Test the document layer
 
 ```bash
@@ -84,7 +93,6 @@ The launch command configures:
 
 - SQLite-backed ADK sessions at `.adk/sessions.db`
 - local file-backed ADK artifacts under `.adk/artifacts`
-- ADK's in-memory MemoryService for cross-session recall while the server is running
 - Ollama at `http://localhost:11434`
 
 The launchers convert the artifact directory to an absolute `file://` URI, as
@@ -94,11 +102,15 @@ Open the local ADK Web URL and select `src`.
 
 ADK Web is launched directly against `src/`, which is the single agent folder.
 Its `__init__.py` imports `agent`, and `agent.py` exposes `root_agent`, which
-are the discovery conventions ADK uses. If you launch ADK manually, use:
+are the discovery conventions ADK uses. For a discovery-only manual launch,
+use:
 
 ```bash
 adk web src
 ```
+
+Use the provided launcher for the complete demo because it also configures the
+persistent SQLite session service and file-backed artifact service.
 
 ## Demo path
 
@@ -155,50 +167,45 @@ Then in another session:
 Which documents have I marked as important?
 ```
 
-### E. Cross-session memory
-
-In one session:
-
-```text
-The Northwind dependency is the issue I am most worried about.
-```
-
-Create a new session without stopping the ADK server:
-
-```text
-What did I say I was most worried about earlier?
-```
-
-The agent can call ADK's `load_memory` tool. The project automatically adds
-session events to the configured MemoryService after agent runs.
-
-`memory://` is intentionally used for the tutorial because it is zero-config
-and fully local. It spans sessions while the ADK process is running, but the
-MemoryService itself is cleared when the server restarts.
-
-### F. Saved artifacts
+### E. Saved and retrievable artifacts
 
 ```text
 Review the launch documents, create a concise launch-risk brief with evidence,
 and save it.
 ```
 
-The agent first gathers document evidence and then calls `save_brief`. The
-result is stored as a local ADK artifact and can be inspected through the
-Artifacts view.
+The agent first gathers document evidence and then calls `save_brief`. It can
+also save a longer Markdown draft intended for editing before publishing on a
+platform such as Medium. To retrieve the content in the same session, ask:
+
+```text
+What briefs have I saved?
+Open Launch_Risk_Brief.md.
+```
+
+The agent uses `list_saved_briefs` and `load_saved_brief`. The result is stored
+as a local ADK artifact and can also be inspected through the Artifacts view.
+On disk, session-scoped artifacts are stored under:
+
+```text
+.adk/artifacts/apps/src/users/<user>/sessions/<session-id>/artifacts/
+  <filename>/versions/<version>/
+```
+
+The `.adk/` directory is excluded from Git so private sessions and generated
+artifacts are not committed.
 
 ## What is persistent?
 
 | Feature | Across new session | Across ADK restart |
 |---|---|---|
-| Current chat history | No | No |
-| SQLite session history | Yes | Yes |
+| Conversation history | No | Yes, when reopening its original session |
 | `user:` preferences/state | Yes | Yes |
 | Pinned document state | Yes | Yes |
-| `memory://` MemoryService | Yes | No |
-| File-backed artifacts | Yes* | Yes |
+| Session-scoped artifacts | No | Yes, when reopening its original session |
 
-`*` Artifact scope depends on the artifact filename and current session/user.
+New sessions begin with an empty conversation and their own artifact scope, but
+they inherit the same user's saved preferences and pinned-document state.
 
 ## Why no vector database?
 

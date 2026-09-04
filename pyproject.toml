@@ -8,7 +8,8 @@ version = "0.1.0"
 description = "A fully local private document assistant built with Google ADK, Gemma, and Ollama."
 readme = "README.md"
 requires-python = ">=3.10"
-license = { file = "LICENSE" }
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 dependencies = [
     "google-adk[db]",
     "litellm",
@@ -18,7 +19,7 @@ dependencies = [
 ]
 
 [tool.setuptools]
-packages = ["src"]
+packages = ["src", "src.workspace"]
 include-package-data = true
 
 [tool.setuptools.package-data]
