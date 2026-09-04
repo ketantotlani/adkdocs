@@ -12,4 +12,5 @@ ARTIFACT_URI="$(python -c 'from pathlib import Path; print(Path(".adk/artifacts"
 adk web \
   --session_service_uri "sqlite:///./.adk/sessions.db" \
   --artifact_service_uri "$ARTIFACT_URI" \
+  --memory_service_uri "memory://" \
   src

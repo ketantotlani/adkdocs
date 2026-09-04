@@ -8,6 +8,7 @@ A fuller local document-assistant project built to demonstrate several Google AD
 - PDF and mixed-file document access
 - Cross-document search and comparison
 - Persistent user-scoped preferences with ADK state + SQLite sessions
+- Cross-session conversational recall with ADK MemoryService
 - Saved Markdown briefs using ADK artifacts
 - ADK Web traces for inspecting tool calls
 
@@ -93,6 +94,7 @@ The launch command configures:
 
 - SQLite-backed ADK sessions at `.adk/sessions.db`
 - local file-backed ADK artifacts under `.adk/artifacts`
+- ADK's in-memory MemoryService for cross-session recall while the server runs
 - Ollama at `http://localhost:11434`
 
 The launchers convert the artifact directory to an absolute `file://` URI, as
@@ -167,7 +169,30 @@ Then in another session:
 Which documents have I marked as important?
 ```
 
-### E. Saved and retrievable artifacts
+### E. Cross-session conversational memory
+
+In one session:
+
+```text
+The Northwind dependency is the issue I am most worried about.
+```
+
+Create a new session without stopping the ADK server, then ask:
+
+```text
+What did I say I was most worried about earlier?
+```
+
+The agent calls ADK's built-in `load_memory` tool. The after-agent callback
+adds only user-authored events to MemoryService, preventing model reasoning and
+tool traces from polluting recall while preserving the normal ADK memory
+workflow shown in the trace.
+
+`memory://` is deliberately zero-config and fully local for this tutorial. It
+spans sessions for the same user while the server is running, but its contents
+are cleared when the ADK server restarts.
+
+### F. Saved and retrievable artifacts
 
 ```text
 Review the launch documents, create a concise launch-risk brief with evidence,
@@ -202,6 +227,7 @@ artifacts are not committed.
 | Conversation history | No | Yes, when reopening its original session |
 | `user:` preferences/state | Yes | Yes |
 | Pinned document state | Yes | Yes |
+| `memory://` conversational memory | Yes | No |
 | Session-scoped artifacts | No | Yes, when reopening its original session |
 
 New sessions begin with an empty conversation and their own artifact scope, but
