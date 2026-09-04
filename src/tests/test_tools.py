@@ -24,6 +24,15 @@ class DocumentToolTests(unittest.TestCase):
         self.assertEqual(result["status"], "success")
         self.assertGreaterEqual(result["match_count"], 2)
 
+    def test_natural_language_search_falls_back_to_keywords(self):
+        result = search_documents(
+            "current pilot launch date change mobile alerts"
+        )
+        paths = {match["path"] for match in result["matches"]}
+        self.assertIn("Atlas_Product_Brief_v3.pdf", paths)
+        self.assertIn("June_Customer_Research.pdf", paths)
+        self.assertIn("Launch_Review_Notes_0818.pdf", paths)
+
     def test_path_escape_is_blocked(self):
         result = read_document("../agent.py")
         self.assertEqual(result["status"], "error")

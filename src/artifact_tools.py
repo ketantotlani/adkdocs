@@ -19,7 +19,7 @@ def _infer_sources(content: str) -> list[str]:
     if not content:
         return []
 
-    pattern = r'\b[\w .()_-]+\.(?:pdf|docx|md|txt|csv|json|py|yaml|yml)\b'
+    pattern = r'(?<![\w.-])[\w().-]+\.(?:pdf|docx|md|txt|csv|json|py|yaml|yml)\b'
     matches = re.findall(pattern, content, flags=re.IGNORECASE)
 
     seen = set()
@@ -56,6 +56,13 @@ async def save_brief(
             "status": "error",
             "message": "Brief content cannot be empty.",
         }
+
+    content_lines = content.splitlines()
+    if (
+        content_lines
+        and content_lines[0].strip().casefold() == f"# {title}".casefold()
+    ):
+        content = "\n".join(content_lines[1:]).lstrip()
 
     normalized_sources = [
         str(source).strip()

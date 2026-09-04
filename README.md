@@ -99,6 +99,8 @@ The launch command configures:
 
 The launchers convert the artifact directory to an absolute `file://` URI, as
 required by current ADK releases (and especially important on Windows).
+The agent also forces LiteLLM to use its bundled local model metadata instead
+of attempting to refresh the public pricing map from the network.
 
 Open the local ADK Web URL and select `src`.
 
@@ -235,7 +237,9 @@ they inherit the same user's saved preferences and pinned-document state.
 
 ## Why no vector database?
 
-This version intentionally uses direct reading plus keyword search.
+This version intentionally uses direct reading plus search that prefers an
+exact phrase and falls back to conservative keyword matching for natural
+language queries.
 
 That makes it possible to explain the complete system before introducing
 embeddings or semantic retrieval. Local RAG is a natural follow-up project once

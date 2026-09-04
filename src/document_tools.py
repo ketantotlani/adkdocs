@@ -1,3 +1,4 @@
+import re
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,11 @@ TEXT_EXTENSIONS = SUPPORTED_EXTENSIONS - {".pdf", ".docx"}
 
 MAX_READ_CHARS = 40000
 MAX_SEARCH_RESULTS = 30
+
+SEARCH_STOP_WORDS = {
+    "and", "are", "did", "does", "for", "from", "how", "into", "the",
+    "this", "was", "what", "when", "where", "which", "why", "with",
+}
 
 
 def _safe_path(relative_path: str) -> Path:
@@ -200,7 +206,24 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
 
     max_results = max(1, min(int(max_results), MAX_SEARCH_RESULTS))
     needle = query.casefold()
+    keywords = [
+        token for token in re.findall(r"[\w-]+", needle)
+        if len(token) >= 3 and token not in SEARCH_STOP_WORDS
+    ]
     matches = []
+
+    def find_match(text: str) -> tuple[int, list[str]] | None:
+        folded = text.casefold()
+        exact_position = folded.find(needle)
+        if exact_position >= 0:
+            return exact_position, [query]
+
+        positions = [(folded.find(term), term) for term in keywords]
+        hits = [(position, term) for position, term in positions if position >= 0]
+        required_hits = 1 if len(keywords) < 3 else 2
+        if len(hits) < required_hits:
+            return None
+        return min(position for position, _ in hits), [term for _, term in hits]
 
     for path in _supported_files():
         suffix = path.suffix.lower()
@@ -209,14 +232,16 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
                 reader = PdfReader(str(path))
                 for page_num in range(1, len(reader.pages) + 1):
                     text = _pdf_page_text(reader, page_num - 1)
-                    pos = text.casefold().find(needle)
-                    if pos >= 0:
+                    found = find_match(text)
+                    if found:
+                        pos, matched_terms = found
                         start = max(0, pos - 160)
                         end = min(len(text), pos + len(query) + 260)
                         matches.append({
                             "path": _relative(path),
                             "location": f"page {page_num}",
                             "snippet": text[start:end].replace("\n", " ")[:450],
+                            "matched_terms": matched_terms,
                         })
                         if len(matches) >= max_results:
                             break
@@ -224,11 +249,14 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
             elif suffix == ".docx":
                 doc = Document(str(path))
                 for para_num, para in enumerate(doc.paragraphs, start=1):
-                    if needle in para.text.casefold():
+                    found = find_match(para.text)
+                    if found:
+                        _, matched_terms = found
                         matches.append({
                             "path": _relative(path),
                             "location": f"paragraph {para_num}",
                             "snippet": para.text[:450],
+                            "matched_terms": matched_terms,
                         })
                         if len(matches) >= max_results:
                             break
@@ -236,11 +264,14 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
             elif suffix in TEXT_EXTENSIONS:
                 lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
                 for line_num, line in enumerate(lines, start=1):
-                    if needle in line.casefold():
+                    found = find_match(line)
+                    if found:
+                        _, matched_terms = found
                         matches.append({
                             "path": _relative(path),
                             "location": f"line {line_num}",
                             "snippet": line[:450],
+                            "matched_terms": matched_terms,
                         })
                         if len(matches) >= max_results:
                             break

@@ -1,6 +1,7 @@
 import os
 
 os.environ.setdefault("OLLAMA_API_BASE", "http://localhost:11434")
+os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
 
 from google.adk.agents import Agent
 from google.adk.models.lite_llm import LiteLlm
@@ -45,6 +46,9 @@ DOCUMENT WORK
 - Read or search relevant documents before making claims about their contents.
 - For long PDFs, search first and then read the relevant page range.
 - When comparing documents, gather evidence from every document involved.
+- Distinguish a document's own date from release, launch, target, and deadline
+  dates. Preserve exact date wording and use newer decision records to resolve
+  conflicts.
 - Mention filenames and page/line/paragraph locations when the tools provide them.
 - Never invent filenames, passages, dates, page numbers, or tool results.
 
