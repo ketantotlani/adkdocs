@@ -4,6 +4,7 @@ from src.document_tools import (
     get_document_info,
     list_documents,
     read_document,
+    read_pdf_pages,
     search_documents,
 )
 
@@ -47,6 +48,16 @@ class DocumentToolTests(unittest.TestCase):
         result = get_document_info("June_Customer_Research.pdf")
         self.assertEqual(result["status"], "success")
         self.assertEqual(result["type"], "pdf")
+
+    def test_read_pdf_pages_rejects_non_integer_arguments(self):
+        result = read_pdf_pages(
+            "Atlas_Product_Brief_v3.pdf", start_page="two", end_page="three"
+        )
+        self.assertEqual(result["status"], "error")
+
+    def test_search_rejects_non_integer_max_results(self):
+        result = search_documents("launch", max_results="many")
+        self.assertEqual(result["status"], "error")
 
 
 if __name__ == "__main__":

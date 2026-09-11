@@ -37,6 +37,19 @@ def _relative(path: Path) -> str:
     return str(path.relative_to(WORKSPACE)).replace("\\", "/")
 
 
+def _to_int(value: Any, default: int | None = None) -> int | None:
+    """Parse a model-supplied integer without raising.
+
+    Local models sometimes pass page numbers or limits as free-form text.
+    Return ``default`` when the value cannot be interpreted as an integer so
+    callers can answer with a structured error instead of crashing the tool.
+    """
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError, AttributeError):
+        return default
+
+
 def _supported_files() -> list[Path]:
     if not WORKSPACE.exists():
         return []
@@ -177,8 +190,16 @@ def read_pdf_pages(
     except Exception as exc:
         return {"status": "error", "message": f"Could not open PDF: {exc}"}
 
-    start_page = max(1, int(start_page))
-    end_page = min(max(start_page, int(end_page)), start_page + 7, total)
+    start = _to_int(start_page)
+    end = _to_int(end_page)
+    if start is None or end is None:
+        return {
+            "status": "error",
+            "message": "start_page and end_page must be integers.",
+        }
+
+    start_page = max(1, start)
+    end_page = min(max(start_page, end), start_page + 7, total)
 
     if start_page > total:
         return {"status": "error", "message": f"PDF has only {total} pages."}
@@ -205,7 +226,10 @@ def search_documents(query: str, max_results: int = 12) -> dict[str, Any]:
     if not query:
         return {"status": "error", "message": "Search query cannot be empty."}
 
-    max_results = max(1, min(int(max_results), MAX_SEARCH_RESULTS))
+    limit = _to_int(max_results)
+    if limit is None:
+        return {"status": "error", "message": "max_results must be an integer."}
+    max_results = max(1, min(limit, MAX_SEARCH_RESULTS))
     needle = query.casefold()
     keywords = [
         token for token in re.findall(r"[\w-]+", needle)
